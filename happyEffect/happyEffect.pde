@@ -1,27 +1,26 @@
 //anger inspired by ryoho https://openprocessing.org/sketch/1084140
 //sorrow inspired by the coding train pixel manipulation
 
-
 PImage img;
 JSONObject json;
 
-float attforce;
-float repforce;
-
-int numParticle= 5000;
-
-int id;
-int joy;
-int anger;
-int surprise;
-int sorrow;
+int id, joy, anger, surprise, sorrow;
 
 //String[] emotion_list = {};
 //int[] emotion_likelihood = {};
 
-
-//array list for anger particle system
+//array list and variables for anger particle system
 ArrayList<Particle> particles;
+float attforce, repforce;
+int numParticle= 5000;
+
+//array list and variables for the joy particle system
+ArrayList<Particle_2> particles_2;
+float xoff,yoff,zoff,inc,col;
+int spread, cols, rows, num;
+PVector[] vectors;
+
+
 
 void setup() {
   strokeWeight(int(random(2,20)));
@@ -41,28 +40,39 @@ void setup() {
   repforce = anger*2;
   attforce = anger*0.2;
   
-  //anger particle system
+  //anger particle system make a condition here for only if anger is >1
   particles = new ArrayList<Particle>();
   for (int i= 0; i< numParticle; i++) {
     particles.add(new Particle(random(width), random(height),int(random(width)), int(random(height))));
   }
+  
+  //surprise particle system make condiition here for surprise >1
+  init_joy();
     
 }
 
 void draw() {
   //background(0);
   //image(img,0,0);
-  sorrow();
+  if (sorrow>=1){
+    sorrow();
+    filter(GRAY);
+  }
+  
   if (anger>=1){
       anger();
+      filter(POSTERIZE,8);
+      //filter(GRAY);
   }
-
+  //joy();
+  surprise();
   noStroke();
 
-  puText();
-
-  
+  puText(); 
 }
+
+// __________________________________________________
+
 
 void anger(){
     for (int i = 0; i <particles.size(); i++){
@@ -99,10 +109,7 @@ void puText() {
 
 //particle class for surprise function
 class Particle {
-  PVector position;
-  PVector target;
-  PVector velocity;
-  PVector acceleration;
+  PVector position, target, velocity, acceleration;
   color color_joy;
   int x_move;
   int y_move;
@@ -140,3 +147,116 @@ class Particle {
   }
     
 }
+
+//function to initiate joy in setup
+void init_joy(){
+  spread = 5;
+  inc = random(0.1,0.8);
+  num = 4000;
+  col = random(255);
+  cols = floor(width/spread)+1;
+  rows = floor(height/spread) +1;
+  vectors = new PVector[cols*rows];
+  particles_2 = new ArrayList<Particle_2>();
+  
+  for (int j = 0; j < num;  j++){
+    particles_2.add(new Particle_2());
+  }
+}
+
+//function to call surprise in draw
+void joy(){
+  //filter(INVERT);
+  //filter(THRESHOLD);
+  //filter(POSTERIZE,3);
+  filter(DILATE);
+  //fill(1, 190, 254,20);
+  fill(255,20);  
+  rect(0,0,width,height);
+  xoff = 0;
+  for (int y = 0; y <rows; y++){
+    xoff = 0;
+    for (int x= 0; x< cols; x++){
+      float angle = noise(xoff,yoff, zoff) * TWO_PI *2;
+      PVector v = PVector.fromAngle(angle);
+      v.setMag(1);
+      vectors[x + y * cols] = v;
+      xoff += inc;
+    }
+    yoff += inc;
+  }
+  zoff += 0.0005;
+  if (col <255)col += 0.5;
+  else col= 0 ;
+  for (Particle_2 p2 : particles_2)p2.run();
+}
+
+
+//particle class for surprise
+class Particle_2{
+  PVector pos, vel, acc, prev;
+  float max = random(2,8);
+  
+  Particle_2() {
+    pos = new PVector(width/2, height/2);
+    prev = new PVector(pos.x, pos.y);
+    vel = new PVector(0,0);
+    acc = new PVector(0,0);
+  }
+  
+  void copy() {
+    prev.x = pos.x;
+    prev.y = pos.y;
+  }
+  
+  void run() {
+    follow();
+    update();
+    show();
+  }
+  
+  void update() {
+    pos.add(vel);
+    vel.limit(max);
+    vel.add(acc);
+    acc.mult(0);
+    if (pos.x > width) {
+      pos.x = 0;
+      copy();
+    }
+    if (pos.x < 0) {
+      pos.x = width;
+      copy();
+    }
+    if (pos.y > height) {
+      pos.y = 0;
+      copy();
+    }
+    if (pos.y < 0) {
+      pos.y = height;
+      copy();
+    }
+  }
+    void follow() {
+      int x = floor(pos.x / spread);
+      int y = floor(pos.y / spread);
+      PVector force = vectors[x+y*cols];
+      acc.add(force);
+    }
+    void show(){
+      color c = img.get(int(pos.x), int(pos.y));
+      stroke(c);
+      line(pos.x,pos.y,prev.x, prev.y);
+      copy();
+    }
+  }
+      
+void surprise() {
+  image(img,0,0);
+  filter(INVERT);
+  filter(POSTERIZE,3);
+  //filter(THRESHOLD);
+}
+  
+
+    
