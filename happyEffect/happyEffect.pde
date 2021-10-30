@@ -30,6 +30,7 @@ void setup() {
   size(600,1200);
   //img.resize(width,height);
   
+  //grabbing the values of emotions this is what you use to modify the functions
   id = json.getInt("id");
   joy = json.getInt("joy");
   anger = json.getInt("anger");
@@ -47,13 +48,17 @@ void setup() {
   }
   
   //surprise particle system make condiition here for surprise >1
-  init_joy();
-    
+  if (joy >=1) {
+    init_joy();
+  }
 }
 
 void draw() {
   //background(0);
   //image(img,0,0);
+    if (surprise >=1) {
+    surprise();
+  }
   if (sorrow>=1){
     sorrow();
     filter(GRAY);
@@ -64,17 +69,28 @@ void draw() {
       filter(POSTERIZE,8);
       //filter(GRAY);
   }
-  //joy();
-  surprise();
+  if (joy >= 1) {
+    joy();
+  }
+  
+
   noStroke();
 
   puText(); 
 }
 
-// __________________________________________________
+// ANGER __________________________________________________
 
 
 void anger(){
+    if (millis() < 2000){
+      image(img,0,0);
+    }
+    //else{
+    //  fill(0,20);  
+    //  rect(0,0,width,height);
+    //}
+    
     for (int i = 0; i <particles.size(); i++){
     Particle p = particles.get(i);
     p.move();
@@ -83,31 +99,7 @@ void anger(){
   }
 }
 
-//sorrow function just picks colors and draws ellipses randomly 
-void sorrow() {
-     for (int i = 0; i<500; i++){
-      float x = random(width);
-      float y = random(height);
-      color c = img.get(int(x),int(y));
-      noStroke();
-      float value = sorrow*30;
-      fill(c,value);
-      ellipse(x,y,int(random(5,sorrow*7)),int(random(5,sorrow*10)));
-      //ellipse(x,y,15,15);
-  } 
-}
-
-//test text function
-void puText() {
-  textSize(50);
-  fill(0,0,0);
-  text("joy " + str(joy), 50,200);
-  text("anger "+ str(anger), 50, 300);
-  text("surprise "+str(surprise), 50, 400);
-  text("sorrow " +str(sorrow), 50, 500);
-}
-
-//particle class for surprise function
+//particle class for anger function
 class Particle {
   PVector position, target, velocity, acceleration;
   color color_joy;
@@ -136,7 +128,7 @@ class Particle {
     repulsion.mult(repforce);
     
     acceleration = attraction.add(repulsion);
-    velocity.mult(3);
+    velocity.mult(10);
     velocity.add(acceleration);
     velocity.limit(3);
     position.add(velocity);
@@ -148,11 +140,30 @@ class Particle {
     
 }
 
+// SORROW  ----------------------------------------------------------
+
+//sorrow function just picks colors and draws ellipses randomly 
+void sorrow() {
+     for (int i = 0; i<500; i++){
+      float x = random(width);
+      float y = random(height);
+      color c = img.get(int(x),int(y));
+      noStroke();
+      float value = sorrow*30;
+      fill(c,value);
+      ellipse(x,y,int(random(5,sorrow*7)),int(random(5,sorrow*10)));
+      //ellipse(x,y,15,15);
+  } 
+}
+
+
+//JOY -----------------------------------------------
+
 //function to initiate joy in setup
 void init_joy(){
-  spread = 5;
+  spread = joy;
   inc = random(0.1,0.8);
-  num = 4000;
+  num = 5000;
   col = random(255);
   cols = floor(width/spread)+1;
   rows = floor(height/spread) +1;
@@ -164,20 +175,28 @@ void init_joy(){
   }
 }
 
-//function to call surprise in draw
+//function to call joy in draw
 void joy(){
+  
+  //adding conditional to show picture immediately before the effect is applied
+  if (millis() < 2000){
+    image(img,0,0);
+  }
+  else{
+    fill(255,20);  
+    rect(0,0,width,height);
+  }
   //filter(INVERT);
   //filter(THRESHOLD);
   //filter(POSTERIZE,3);
   filter(DILATE);
   //fill(1, 190, 254,20);
-  fill(255,20);  
-  rect(0,0,width,height);
+
   xoff = 0;
   for (int y = 0; y <rows; y++){
     xoff = 0;
     for (int x= 0; x< cols; x++){
-      float angle = noise(xoff,yoff, zoff) * TWO_PI *2;
+      float angle = noise(xoff,yoff, zoff) * PI *(joy/2)+1;
       PVector v = PVector.fromAngle(angle);
       v.setMag(1);
       vectors[x + y * cols] = v;
@@ -192,13 +211,13 @@ void joy(){
 }
 
 
-//particle class for surprise
+//particle class for joy
 class Particle_2{
   PVector pos, vel, acc, prev;
   float max = random(2,8);
   
   Particle_2() {
-    pos = new PVector(width/2, height/2);
+    pos = new PVector(width/3, height/2);
     prev = new PVector(pos.x, pos.y);
     vel = new PVector(0,0);
     acc = new PVector(0,0);
@@ -250,13 +269,31 @@ class Particle_2{
       copy();
     }
   }
+
+
+// SURPRISE  filler code to change -------------------------------------
       
 void surprise() {
   image(img,0,0);
-  filter(INVERT);
-  filter(POSTERIZE,3);
+  if (millis()/1000%2==0){
+    filter(INVERT);
+  }
+  else  {
+    filter(POSTERIZE,3);
+  }
   //filter(THRESHOLD);
 }
-  
+
+
+//TEXT -----------------------------------------------------
+//test text function
+void puText() {
+  textSize(50);
+  fill(0,0,0);
+  text("joy " + str(joy), 50,200);
+  text("anger "+ str(anger), 50, 300);
+  text("surprise "+str(surprise), 50, 400);
+  text("sorrow " +str(sorrow), 50, 500);
+}
 
     
