@@ -1,5 +1,7 @@
 //anger inspired by ryoho https://openprocessing.org/sketch/1084140
 //sorrow inspired by the coding train pixel manipulation
+//joy inspired by artisan's https://openprocessing.org/sketch/696867
+
 
 PImage img;
 JSONObject json;
